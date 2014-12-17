@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=utf-8 />
+	<title></title>
+	<script src="lib/underscore.js"></script>
+	<script src="stream.js"></script>
+	<style>
+		body { margin:0; padding:0; height:100%; }
+		#cv { position:absolute; top:0; }
+		#background { position:absolute; top:0; width:400px; height:300px; background:#333; }
+	</style>
+</head>
+<body>
+	<div id="background"></div>
+	<canvas id="cv" width="400px" height="300px"></canvas>
+
+	<script>
+		window.onload = function() {
+			var cv = document.getElementById('cv');
+			var ctx = cv.getContext('2d');
+
+			Stream.animate(ctx);
+		};
+	</script>
+</body>
+</html>
