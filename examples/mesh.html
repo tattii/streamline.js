@@ -15,8 +15,8 @@
 	<canvas id="cv" width="800px" height="600px"></canvas>
 
 	
-	<script src="lib/underscore.js"></script>
-	<script src="stream.js"></script>
+	<script src="../lib/underscore.js"></script>
+	<script src="../stream.js"></script>
 	<script>
 		window.onload = function() {
 			var cv = document.getElementById('cv');
@@ -28,8 +28,8 @@
 			);
 
 			var wind_field = new GribWind({
-				u_data: [10,10,10,0,0,0,0,0,0,-1,-1,-1],
-				v_data: [0,0,0,1,-1,1,0,1,-1,0,0,0],
+				u_data: [20,10,10,0,0,0,0,0,0,-1,-1,-1],
+				v_data: [0,0,0,1,-1,2,0,1,-1,0,0,0],
 				nlng: 4,
 				nlat: 3,
 				p0: [35, 130],
