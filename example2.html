@@ -23,23 +23,24 @@
 			var ctx = cv.getContext('2d');
 
 			var proj = new SimpleProjection(
-				{ x:0,   y:0,   lat:35, lng:130 },
-				{ x:800, y:600, lat:33, lng:133 }
+				{ x:0,   y:0,   lat:-6, lng:-8 },
+				{ x:400, y:300, lat:0,   lng:0 }
 			);
 
-			var wind_field = new GribWind({
-				u_data: [20,10,10,0,0,0,0,0,0,-1,-1,-1],
-				v_data: [0,0,0,1,-1,2,0,1,-1,0,0,0],
-				nlng: 4,
-				nlat: 3,
-				p0: [35, 130],
-				p1: [33, 133],
-				dlng: 1.0,
-				dlat: 1.0
-			});
+			var magnetic_field = {
+				getVector: function(p){
+					var x = p[1], y = p[0];
+					var a = 20 / (2*Math.PI);
+					var R = x*x + y*y + 0.4;
+					var Bx = -1 * a * y / R;
+					var By = a * x / R;
+					return [ Bx, By ];
+				}
+			};
+
 
 			var stream = new Stream({ x:[0,800], y:[0,600] });
-			stream.setField(wind_field, proj);
+			stream.setField(magnetic_field, proj);
 			stream.animate(ctx);
 
 		};
