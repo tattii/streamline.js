@@ -3,24 +3,45 @@
 <head>
 	<meta charset=utf-8 />
 	<title></title>
-	<script src="lib/underscore.js"></script>
-	<script src="stream.js"></script>
+
 	<style>
 		body { margin:0; padding:0; height:100%; }
 		#cv { position:absolute; top:0; }
-		#background { position:absolute; top:0; width:400px; height:300px; background:#333; }
+		#background { position:absolute; top:0; width:800px; height:600px; background:#333; }
 	</style>
 </head>
 <body>
 	<div id="background"></div>
-	<canvas id="cv" width="400px" height="300px"></canvas>
+	<canvas id="cv" width="800px" height="600px"></canvas>
 
+	
+	<script src="lib/underscore.js"></script>
+	<script src="stream.js"></script>
 	<script>
 		window.onload = function() {
 			var cv = document.getElementById('cv');
 			var ctx = cv.getContext('2d');
 
-			Stream.animate(ctx);
+			var proj = new SimpleProjection(
+				{ x:0,   y:0,   lat:35, lng:130 },
+				{ x:800, y:600, lat:33, lng:133 }
+			);
+
+			var wind_field = new GribWind({
+				u_data: [10,10,10,0,0,0,0,0,0,-1,-1,-1],
+				v_data: [0,0,0,1,-1,1,0,1,-1,0,0,0],
+				nlng: 4,
+				nlat: 3,
+				p0: [35, 130],
+				p1: [33, 133],
+				dlng: 1.0,
+				dlat: 1.0
+			});
+
+			var stream = new Stream({ x:[0,800], y:[0,600] });
+			stream.setField(wind_field, proj);
+			stream.animate(ctx);
+
 		};
 	</script>
 </body>
