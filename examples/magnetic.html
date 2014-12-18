@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset=utf-8 />
+	<title>Magnetic field</title>
+
+	<style>
+		body { margin:0; padding:0; height:100%; }
+		#cv { position:absolute; top:0; }
+		#background { position:absolute; top:0; width:800px; height:600px; background:#333; }
+	</style>
+</head>
+<body>
+	<div id="background"></div>
+	<canvas id="cv" width="800px" height="600px"></canvas>
+
+	
+	<script src="../lib/underscore.js"></script>
+	<script src="../stream.js"></script>
+	<script>
+		window.onload = function() {
+			var cv = document.getElementById('cv');
+			var ctx = cv.getContext('2d');
+
+			var proj = new SimpleProjection(
+				{ x:0,   y:0,   lat:-6, lng:-8 },
+				{ x:400, y:300, lat:0,   lng:0 }
+			);
+
+			var magnetic_field = {
+				getVector: function(p){
+					var x = p[1], y = p[0];
+					var a = 20 / (2*Math.PI);
+					var R = x*x + y*y + 0.4;
+					var Bx = -1 * a * y / R;
+					var By = a * x / R;
+					return [ Bx, By ];
+				}
+			};
+
+
+			var stream = new Stream({ x:[0,800], y:[0,600] });
+			stream.setField(magnetic_field, proj);
+			stream.animate(ctx);
+
+		};
+	</script>
+</body>
+</html>

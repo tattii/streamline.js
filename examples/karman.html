@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset=utf-8 />
-	<title></title>
+	<title>Karman's vortex</title>
 
 	<style>
 		body { margin:0; padding:0; height:100%; }
@@ -15,8 +15,8 @@
 	<canvas id="cv" width="800px" height="600px"></canvas>
 
 	
-	<script src="lib/underscore.js"></script>
-	<script src="stream.js"></script>
+	<script src="../lib/underscore.js"></script>
+	<script src="../stream.js"></script>
 	<script>
 		window.onload = function() {
 			var cv = document.getElementById('cv');
@@ -27,20 +27,26 @@
 				{ x:400, y:300, lat:0,   lng:0 }
 			);
 
-			var magnetic_field = {
+			var karman_field = {
 				getVector: function(p){
 					var x = p[1], y = p[0];
-					var a = 20 / (2*Math.PI);
-					var R = x*x + y*y + 0.4;
-					var Bx = -1 * a * y / R;
-					var By = a * x / R;
-					return [ Bx, By ];
+					var k = 2;
+					var A = 1;
+					var a = Math.PI / A;
+					var b = a * 0.2806;
+					var deno1 = Math.cos(2*A*x) - Math.cosh(2*A*(y-b/2)) - 0.1;
+					var deno2 = Math.cos(2*A*(x-a/2)) - Math.cosh(2*A*(y+b/2)) - 0.1;
+
+					var Px = -1*A * Math.sinh(2*A*(y-b/2)) / deno1 + A * Math.sinh(2*A*(y+b/2)) / deno2 
+						+ A * Math.tanh(A*b);
+					var Py = A * Math.sin(2*A*x) / deno1 - A * Math.sin(2*A*(x-a/2)) / deno2;
+					return [ k*Px, k*Py ];
 				}
 			};
 
 
 			var stream = new Stream({ x:[0,800], y:[0,600] });
-			stream.setField(magnetic_field, proj);
+			stream.setField(karman_field, proj);
 			stream.animate(ctx);
 
 		};
