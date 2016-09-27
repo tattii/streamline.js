@@ -7,7 +7,7 @@
  *
  */
 
-function Streamline(bound, streamCtx, maskCtx) {
+function Streamline(bound, streamCtx) {
 
 	var PARTICLE_MULTIPLIER = 7;
 	var PARTICLE_LINE_WIDTH = 1.0;
@@ -21,7 +21,8 @@ function Streamline(bound, streamCtx, maskCtx) {
 	bound.height = bound.y[1] - bound.y[0];
 
 	var timer;  // frame rate timer
-	var mask = Mask();
+	var mask;   // mask canvas
+	var maxv = 100; // mask relative max value
 	
 	// Grid - set of vectors, same size of canvas
 	// vector: [wind_u, wind_v, wind_speed]
@@ -48,17 +49,19 @@ function Streamline(bound, streamCtx, maskCtx) {
 					// set vector
 					var wind = (v[0] == null) ?
 						NULL_VECTOR : 
-						[ v[0] * scale, v[1] * -1*scale, Math.sqrt(v[0]*v[0] + v[1]*v[1]) ];
+						[ v[0] * scale, v[1] * scale, Math.sqrt(v[0]*v[0] + v[1]*v[1]) ];
 					row[x] = row[x+1] = wind;
 
 					// set color mask from wind speed
-					var color = (v[0] == null) ?
-						TRANSPARENT_BLACK :
-						extendedSinebowColor(Math.min(wind[2], 100) / 100, MASK_ALPHA);
-					mask.set(x,   y,   color)
-						.set(x+1, y,   color)
-						.set(x,   y+1, color)
-						.set(x+1, y+1, color);
+					if (mask){
+						var color = (v[0] == null) ?
+							TRANSPARENT_BLACK :
+							extendedSinebowColor(Math.min(wind[2], maxv) / maxv, MASK_ALPHA);
+						mask.set(x,   y,   color)
+							.set(x+1, y,   color)
+							.set(x,   y+1, color)
+							.set(x+1, y+1, color);
+					}
 				}
 				rows[y] = rows[y+1] = row;
 			}
@@ -106,7 +109,7 @@ function Streamline(bound, streamCtx, maskCtx) {
 
 
 	// color mask
-	var Mask = function(){
+	function Mask (maskCtx){
 		maskCtx.fillStyle = "rgba(0,0,0,1)";
 		maskCtx.fill();
 
@@ -125,8 +128,16 @@ function Streamline(bound, streamCtx, maskCtx) {
 				data[i+2] = rgba[2];
 				data[i+3] = rgba[3];
 				return this;
+			},
+			draw: function() {
+				maskCtx.putImageData(imageData, 0, 0);
 			}
 		};
+	}
+
+	function setMask(ctx, max_value) {
+		mask = Mask(ctx);
+		maxv = max_value;
 	}
 
 	
@@ -249,7 +260,7 @@ function Streamline(bound, streamCtx, maskCtx) {
 			});
 		}
 
-		maskCtx.putImageData(mask.imageData, 0, 0);
+		if (mask) mask.draw();
 		(function frame() {
 			try {
 				evolve();
@@ -264,6 +275,7 @@ function Streamline(bound, streamCtx, maskCtx) {
 
 	return {
 		setField: setField,
+		setMask: setMask,
 		animate: animate
 	};
 }

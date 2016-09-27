@@ -6,13 +6,15 @@
 
 	<style>
 		body { margin:0; padding:0; height:100%; }
-		#cv { position:absolute; top:0; }
+		#cv { position:absolute; top:0; z-index:2; }
+		#mask { position:absolute; top:0; z-index:2; }
 		#background { position:absolute; top:0; width:800px; height:600px; background:#333; }
 	</style>
 </head>
 <body>
 	<div id="background"></div>
 	<canvas id="cv" width="800px" height="600px"></canvas>
+	<canvas id="mask" width="800px" height="600px"></canvas>
 
 	
 	<script src="../lib/underscore.js"></script>
@@ -22,6 +24,7 @@
 		window.onload = function() {
 			var cv = document.getElementById('cv');
 			var ctx = cv.getContext('2d');
+			var mask = document.getElementById('mask').getContext('2d');
 
 			var proj = new SimpleProjection(
 				{ x:0,   y:0,   lat:-6, lng:-8 },
@@ -40,9 +43,10 @@
 			};
 
 
-			var streamline = new Streamline({ x:[0,800], y:[0,600] });
+			var streamline = new Streamline({ x:[0,800], y:[0,600] }, ctx)
+			streamline.setMask(mask, 7);
 			streamline.setField(magnetic_field, proj);
-			streamline.animate(ctx);
+			streamline.animate(0.5);
 
 		};
 	</script>
