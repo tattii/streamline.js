@@ -1,12 +1,12 @@
 /**
- *   Streamline - vector field visualization using canvas
+ * Streamline - vector field visualization using canvas
  *
- *   NOTE: stream.setField(field, projection);
- *		field: require getVector method
- *			get vector at any point(x,y) on canvas
- *		projection: require unproject method
- *			project canvas point(x,y) to field point(cf. latlng)
+ * @author Yuta Tachibana
+ *
+ * inspired from https://github.com/cambecc/earth
+ *
  */
+
 function Streamline(bound, streamCtx, maskCtx) {
 
 	var PARTICLE_MULTIPLIER = 7;
@@ -23,31 +23,38 @@ function Streamline(bound, streamCtx, maskCtx) {
 	var timer;  // frame rate timer
 	var mask = Mask();
 	
-	/**
-	 *	Grid - canvasと同じ大きさのベクトル集合
-	 *		fieldから生成
-	 *   	xy
-	 *   	vector: [u, v, m]
-	 */
+	// Grid - set of vectors, same size of canvas
+	// vector: [wind_u, wind_v, wind_speed]
 	var Grid = function(){
 		var rows = [];
 
+		// set vectors
+		// field: require getVector(latlon) method
+		// projection: require unproject(point) method
 		function set(field, projection, scale) {
-			if ( !scale ) scale = 1;
+			if (!scale) scale = 1;
 			rows = [];
 			for (var y = bound.y[0]; y < bound.y[1]; y+=2){
 				interpolateRow(y);
 			}
 
+			// interpolate vectors each 2x2 pixels
 			function interpolateRow(y) {
 				var row = [];
-				for (var x = bound.x[0]; x < bound.x[1]; x+=2){
+				for (var x = bound.x[0]; x < bound.x[1]; x += 2){
 					var latlng = projection.unproject(x, y);
 					var v = field.getVector(latlng);
-					var wind = (v[0] == null) ? NULL_VECTOR : [ v[0]*scale, v[1]*-1*scale, Math.sqrt(v[0]*v[0] + v[1]*v[1]) ];
+
+					// set vector
+					var wind = (v[0] == null) ?
+						NULL_VECTOR : 
+						[ v[0] * scale, v[1] * -1*scale, Math.sqrt(v[0]*v[0] + v[1]*v[1]) ];
 					row[x] = row[x+1] = wind;
 
-					var color = (v[0] == null) ? TRANSPARENT_BLACK : extendedSinebowColor(Math.min(wind[2], 100) / 100, MASK_ALPHA);
+					// set color mask from wind speed
+					var color = (v[0] == null) ?
+						TRANSPARENT_BLACK :
+						extendedSinebowColor(Math.min(wind[2], 100) / 100, MASK_ALPHA);
 					mask.set(x,   y,   color)
 						.set(x+1, y,   color)
 						.set(x,   y+1, color)
@@ -91,9 +98,16 @@ function Streamline(bound, streamCtx, maskCtx) {
 		};
 	}();
 
+	function setField(field, projection, scale){
+		if (timer) clearTimeout(timer);
+		Grid.release();
+		Grid.set(field, projection, scale);
+	}
 
-	function Mask(){
-		maskCtx.fillStyle = "rgba(255,0,0,1)";
+
+	// color mask
+	var Mask = function(){
+		maskCtx.fillStyle = "rgba(0,0,0,1)";
 		maskCtx.fill();
 
 		var imageData = maskCtx.getImageData(0, 0, bound.width, bound.height);
@@ -163,24 +177,13 @@ function Streamline(bound, streamCtx, maskCtx) {
 	}
 
 
-	function setField(field, projection, scale){
-		if (timer) clearTimeout(timer);
-		Grid.release();
-		Grid.set(field, projection, scale);
-	}
-
-
-
-
-	/**
-	 *   animate stream
-	 *		require canvas context
-	 */
+	// animate streamline
 	function animate(density){
 		var color = colorScale(10, 17);
 		var fadeFillStyle = "rgba(0, 0, 0, 0.97)";
 		var buckets = color.map(function(){ return []; });
-		if ( !density ) density = 1;
+		if (!density) density = 1;
+
 		var particleCount = Math.round(bound.width * PARTICLE_MULTIPLIER * density);
 		console.log("particles:" + particleCount)
 		var particles = [];
