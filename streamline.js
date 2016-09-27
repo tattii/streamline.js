@@ -103,6 +103,7 @@ function Streamline(bound, streamCtx) {
 
 	function setField(field, projection, scale){
 		if (timer) clearTimeout(timer);
+		streamCtx.clearRect(0, 0, bound.width, bound.height);
 		Grid.release();
 		Grid.set(field, projection, scale);
 	}
