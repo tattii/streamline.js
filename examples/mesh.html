@@ -16,7 +16,9 @@
 
 	
 	<script src="../lib/underscore.js"></script>
-	<script src="../stream.js"></script>
+	<script src="../streamline.js"></script>
+	<script src="../simple-projection.js"></script>
+	<script src="../grib-wind.js"></script>
 	<script>
 		window.onload = function() {
 			var cv = document.getElementById('cv');
@@ -38,9 +40,9 @@
 				dlat: 1.0
 			});
 
-			var stream = new Stream({ x:[0,800], y:[0,600] });
-			stream.setField(wind_field, proj);
-			stream.animate(ctx);
+			var streamline = new Streamline({ x:[0,800], y:[0,600] });
+			streamline.setField(wind_field, proj);
+			streamline.animate(ctx);
 
 		};
 	</script>

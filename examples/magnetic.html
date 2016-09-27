@@ -16,7 +16,8 @@
 
 	
 	<script src="../lib/underscore.js"></script>
-	<script src="../stream.js"></script>
+	<script src="../streamline.js"></script>
+	<script src="../simple-projection.js"></script>
 	<script>
 		window.onload = function() {
 			var cv = document.getElementById('cv');
@@ -39,9 +40,9 @@
 			};
 
 
-			var stream = new Stream({ x:[0,800], y:[0,600] });
-			stream.setField(magnetic_field, proj);
-			stream.animate(ctx);
+			var streamline = new Streamline({ x:[0,800], y:[0,600] });
+			streamline.setField(magnetic_field, proj);
+			streamline.animate(ctx);
 
 		};
 	</script>
