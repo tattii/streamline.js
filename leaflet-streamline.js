@@ -39,8 +39,8 @@ L.Streamline = L.Layer.extend({
 		this._layer = L.DomUtil.create('div', 'stream-layer leaflet-zoom-hide');
 		this._map.getPanes().overlayPane.appendChild(this._layer);
 
-		this._maskCtx = this._initCanvas("mask-streamline");	
-		this._streamCtx = this._initCanvas("streamline");	
+		this._maskCtx = this._initCanvas("streamline-layer-mask", 3);	
+		this._streamCtx = this._initCanvas("streamline-layer-stream", 2);	
 		this._streamCtx.globalAlpha = 0.9;
 
 		this.streamline = new Streamline(
@@ -50,11 +50,12 @@ L.Streamline = L.Layer.extend({
 		this.streamline.setMask(this._maskCtx, 100);
 	},
 
-	_initCanvas: function (id) {
+	_initCanvas: function (id, zindex) {
 		var canvas = document.createElement("canvas");
 		canvas.id = id;
 		canvas.width = this._width;
 		canvas.height = this._height;
+		canvas.style.zIndex = zindex;
 		this._layer.appendChild(canvas);
 
 		return canvas.getContext("2d");
