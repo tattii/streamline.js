@@ -10,8 +10,8 @@
  */
 
 L.Streamline = L.Layer.extend({
-	initialize: function () {
-
+	initialize: function (windData) {
+		this._windData = windData;
 	},
 
 	onAdd: function (map) {
@@ -62,10 +62,12 @@ L.Streamline = L.Layer.extend({
 
 	_update: function (){
 		L.DomUtil.setOpacity(this._layer, 0);
+		var bounds = this._map.getBounds(),
+			zoom = this._map.getZoom();
 		var _this = this;
 
-		this._getWindData(function(wind_field) {
-			_this.streamline.setField(wind_field, _this._map, scale[t._map.getZoom()-5]);
+		this._windData.getWindField(bounds, zoom, function (windField) {
+			_this.streamline.setField(windField, _this._map, scale[t._map.getZoom()-5]);
 			_this.streamline.animate();
 			
 			// move canvas position
