@@ -31,8 +31,7 @@ function Streamline(bound, streamCtx) {
 
 		// set vectors
 		// field: require getVector(latlon) method
-		// projection: require unproject(point) method
-		function set(field, projection, scale) {
+		function set(field, unproject, scale) {
 			if (!scale) scale = 1;
 			rows = [];
 			for (var y = bound.y[0]; y < bound.y[1]; y+=2){
@@ -43,7 +42,7 @@ function Streamline(bound, streamCtx) {
 			function interpolateRow(y) {
 				var row = [];
 				for (var x = bound.x[0]; x < bound.x[1]; x += 2){
-					var latlng = projection.unproject(x, y);
+					var latlng = unproject(x, y);
 					var v = field.getVector(latlng);
 
 					// set vector
@@ -101,11 +100,11 @@ function Streamline(bound, streamCtx) {
 		};
 	}();
 
-	function setField(field, projection, scale){
+	function setField(field, unproject, scale){
 		if (timer) clearTimeout(timer);
 		streamCtx.clearRect(0, 0, bound.width, bound.height);
 		Grid.release();
-		Grid.set(field, projection, scale);
+		Grid.set(field, unproject, scale);
 	}
 
 
