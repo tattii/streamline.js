@@ -63,21 +63,29 @@ L.Streamline = L.Layer.extend({
 	_update: function (){
 		L.DomUtil.setOpacity(this._layer, 0);
 		var bounds = this._map.getBounds(),
-			zoom = this._map.getZoom();
+			zoom = this._map.getZoom(),
+			scale = this._getScale(zoom);
 		var _this = this;
 
 		this._windData.getWindField(bounds, zoom, function (windField) {
-			_this.streamline.setField(windField, _this._map, scale[t._map.getZoom()-5]);
+			var origin = _this._map.getPixelOrigin();
+			function unproject (x, y) {
+				return _this._map.unproject([origin.x + x, origin.y + y]);
+			}
+
+			_this.streamline.setField(windField, unproject, scale);
 			_this.streamline.animate();
 			
 			// move canvas position
-			var point = _this._map.getPixelBounds().min;
-			L.DomUtil.setPosition(t._layer, point);
+			L.DomUtil.setPosition(t._layer, origin);
 			L.DomUtil.setOpacity(t._layer, 1.0);
 		});
 	},
 	
-
+	_getScale: function (zoom) {
+		var scale = [0.3, 0.4, 0.6, 0.8, 1.0];
+		return scale[zoom - 5];
+	}
 });
 
 L.streamline = function() {
