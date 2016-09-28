@@ -73,12 +73,14 @@ L.Streamline = L.Layer.extend({
 				return _this._map.unproject([origin.x + x, origin.y + y]);
 			}
 
+			console.time("create field");
 			_this.streamline.setField(windField, unproject, scale);
+			console.timeEnd("create field");
 			_this.streamline.animate();
-			
-			// move canvas position
-			L.DomUtil.setPosition(t._layer, origin);
-			L.DomUtil.setOpacity(t._layer, 1.0);
+
+			// show streamline
+			$("#loading").hide();
+			L.DomUtil.setOpacity(_this._layer, 1.0);
 		});
 	},
 	
