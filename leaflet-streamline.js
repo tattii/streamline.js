@@ -36,7 +36,7 @@ L.Streamline = L.Layer.extend({
 	},
 
 	_initLayer: function (){
-		this._layer = L.DomUtil.create('div', 'stream-layer leaflet-zoom-hide');
+		this._layer = L.DomUtil.create('div', 'streamline-layer');
 		this._map.getPanes().overlayPane.appendChild(this._layer);
 
 		this._maskCtx = this._initCanvas("streamline-layer-mask", 3);	
@@ -80,8 +80,10 @@ L.Streamline = L.Layer.extend({
 			_this.streamline.animate();
 
 			// show streamline
-			$("#loading").hide();
+			var pos = _this._map.latLngToLayerPoint(_this._map.getBounds().getNorthWest());
+			L.DomUtil.setPosition(_this._layer, pos);
 			L.DomUtil.setOpacity(_this._layer, 1.0);
+			$("#loading").hide();
 		});
 	},
 	
