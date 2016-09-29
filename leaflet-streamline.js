@@ -88,18 +88,20 @@ L.Streamline = L.Layer.extend({
 		var _this = this;
 
 		this._windData.getWindField(bounds, zoom, function (windField) {
-			var origin = _this._map.getPixelOrigin();
+			var origin = _this._map.getBounds().getNorthWest();
+			var originPoint = _this._map.project(origin);
+
 			function unproject (x, y) {
-				return _this._map.unproject([origin.x + x, origin.y + y]);
+				return _this._map.unproject(originPoint.add([x, y]));
 			}
 
-			console.time("create field");
+			console.time("interpolate field");
 			_this.streamline.setField(windField, unproject, scale);
-			console.timeEnd("create field");
+			console.timeEnd("interpolate field");
 			_this.streamline.animate();
 
 			// show streamline
-			var pos = _this._map.latLngToLayerPoint(_this._map.getBounds().getNorthWest());
+			var pos = _this._map.latLngToLayerPoint(origin);
 			L.DomUtil.setPosition(_this._layer, pos);
 			L.DomUtil.setOpacity(_this._layer, 1.0);
 			_this._updating = false;
