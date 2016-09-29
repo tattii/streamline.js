@@ -24,6 +24,8 @@ L.Streamline = L.Layer.extend({
 		// set events
 		map.on('viewreset', this._update, this);
 		map.on('moveend', this._update, this);
+		map.on('movestart', this._startUpdate, this);
+		map.on('zoomstart', this._startUpdate, this);
 
 		// first draw
 		this._update();
@@ -33,6 +35,14 @@ L.Streamline = L.Layer.extend({
 		this._map.getPanes().overlayPane.removeChild(this._layer);
 		this._map.off('viewreset');
 		this._map.off('moveend');
+	},
+
+	onUpdate: function () {
+		$("#loading").show();
+	},
+
+	onUpdated: function () {
+		$("#loading").hide();
 	},
 
 	_initLayer: function (){
@@ -61,8 +71,17 @@ L.Streamline = L.Layer.extend({
 		return canvas.getContext("2d");
 	},
 
+	_startUpdate: function (){
+		if (!this._updating){
+			this._updating = true;
+			this.onUpdate();
+			L.DomUtil.setOpacity(this._layer, 0);
+		}
+	},
+
 	_update: function (){
-		L.DomUtil.setOpacity(this._layer, 0);
+		this._startUpdate();
+
 		var bounds = this._map.getBounds(),
 			zoom = this._map.getZoom(),
 			scale = this._getScale(zoom);
@@ -83,7 +102,8 @@ L.Streamline = L.Layer.extend({
 			var pos = _this._map.latLngToLayerPoint(_this._map.getBounds().getNorthWest());
 			L.DomUtil.setPosition(_this._layer, pos);
 			L.DomUtil.setOpacity(_this._layer, 1.0);
-			$("#loading").hide();
+			_this._updating = false;
+			_this.onUpdated();
 		});
 	},
 	
