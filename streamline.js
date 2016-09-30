@@ -31,8 +31,15 @@ function Streamline(bound, streamCtx) {
 
 		// set vectors
 		// field: require getVector(latlon) method
-		function set(field, unproject, scale) {
-			if (!scale) scale = 1;
+		function set(field, unproject, scale, inverseV) {
+			var scale_u = 1, scale_v = 1;
+			if (scale) {
+				scale_u = scale_v = scale;
+			}	
+			if (inverseV){
+				scale_v *= -1;
+			}
+
 			rows = [];
 			for (var y = bound.y[0]; y < bound.y[1]; y+=2){
 				interpolateRow(y);
@@ -48,7 +55,7 @@ function Streamline(bound, streamCtx) {
 					// set vector
 					var wind = (v[0] == null) ?
 						NULL_VECTOR : 
-						[ v[0] * scale, v[1] * scale, Math.sqrt(v[0]*v[0] + v[1]*v[1]) ];
+						[ v[0] * scale_u, v[1] * scale_v, Math.sqrt(v[0]*v[0] + v[1]*v[1]) ];
 					row[x] = row[x+1] = wind;
 
 					// set color mask from wind speed
@@ -100,11 +107,11 @@ function Streamline(bound, streamCtx) {
 		};
 	}();
 
-	function setField(field, unproject, scale){
+	function setField(field, unproject, scale, inverseV){
 		if (timer) clearTimeout(timer);
 		streamCtx.clearRect(0, 0, bound.width, bound.height);
 		Grid.release();
-		Grid.set(field, unproject, scale);
+		Grid.set(field, unproject, scale, inverseV);
 	}
 
 

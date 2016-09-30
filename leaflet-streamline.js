@@ -96,7 +96,7 @@ L.Streamline = L.Layer.extend({
 			}
 
 			console.time("interpolate field");
-			_this.streamline.setField(windField, unproject, scale);
+			_this.streamline.setField(windField, unproject, scale, true);
 			console.timeEnd("interpolate field");
 			_this.streamline.animate();
 
