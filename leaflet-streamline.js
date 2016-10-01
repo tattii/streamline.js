@@ -81,6 +81,12 @@ L.Streamline = L.Layer.extend({
 
 	_update: function (){
 		this._startUpdate();
+		if (this._loading){
+			// interrupt
+			this._windData.abort();
+			this.streamline.cancel();
+		}
+		this._loading = true;
 
 		var bounds = this._map.getBounds(),
 			zoom = this._map.getZoom(),
@@ -98,13 +104,19 @@ L.Streamline = L.Layer.extend({
 			console.time("interpolate field");
 			_this.streamline.setField(windField, unproject, scale, true);
 			console.timeEnd("interpolate field");
+			
+			console.time("start animating");
 			_this.streamline.animate();
+			console.timeEnd("start animating");
 
 			// show streamline
 			var pos = _this._map.latLngToLayerPoint(origin);
 			L.DomUtil.setPosition(_this._layer, pos);
 			L.DomUtil.setOpacity(_this._layer, 1.0);
+
+			// done
 			_this._updating = false;
+			_this._loading = false;
 			_this.onUpdated();
 		});
 	},

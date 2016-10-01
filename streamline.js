@@ -23,6 +23,7 @@ function Streamline(bound, streamCtx) {
 	var timer;  // frame rate timer
 	var mask;   // mask canvas
 	var maxv = 100; // mask relative max value
+	var _cancel = false;
 	
 	// Grid - set of vectors, same size of canvas
 	// vector: [wind_u, wind_v, wind_speed]
@@ -111,6 +112,7 @@ function Streamline(bound, streamCtx) {
 		if (timer) clearTimeout(timer);
 		streamCtx.clearRect(0, 0, bound.width, bound.height);
 		Grid.release();
+		if (_cancel) return canceled();
 		Grid.set(field, unproject, scale, inverseV);
 	}
 
@@ -197,6 +199,7 @@ function Streamline(bound, streamCtx) {
 
 	// animate streamline
 	function animate(density){
+		if (_cancel) return canceled();
 		var color = colorScale(10, 17);
 		var fadeFillStyle = "rgba(0, 0, 0, 0.97)";
 		var buckets = color.map(function(){ return []; });
@@ -269,6 +272,7 @@ function Streamline(bound, streamCtx) {
 
 		if (mask) mask.draw();
 		(function frame() {
+			if (_cancel) return canceled();
 			try {
 				evolve();
 				draw();
@@ -280,10 +284,19 @@ function Streamline(bound, streamCtx) {
 		})();
 	}
 
+	function cancel () {
+		_cancel = true;
+	}
+
+	function cenceled () {
+		_cancel = false;
+	}
+
 	return {
 		setField: setField,
 		setMask: setMask,
-		animate: animate
+		animate: animate,
+		cancel: cancel
 	};
 }
 
