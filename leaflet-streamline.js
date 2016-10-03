@@ -10,8 +10,14 @@
  */
 
 L.Streamline = L.Layer.extend({
-	initialize: function (windData) {
+	options: {
+		onUpdate: function (){},
+		onUpdated: function (){}
+	},
+
+	initialize: function (windData, options) {
 		this._windData = windData;
+		L.setOptions(this, options);
 	},
 
 	onAdd: function (map) {
@@ -35,14 +41,6 @@ L.Streamline = L.Layer.extend({
 		this._map.getPanes().overlayPane.removeChild(this._layer);
 		this._map.off('viewreset');
 		this._map.off('moveend');
-	},
-
-	onUpdate: function () {
-		$("#loading").show();
-	},
-
-	onUpdated: function () {
-		$("#loading").hide();
 	},
 
 	_initLayer: function (){
@@ -74,7 +72,7 @@ L.Streamline = L.Layer.extend({
 	_startUpdate: function (){
 		if (!this._updating){
 			this._updating = true;
-			this.onUpdate();
+			this.options.onUpdate();
 			L.DomUtil.setOpacity(this._layer, 0);
 		}
 	},
@@ -117,7 +115,7 @@ L.Streamline = L.Layer.extend({
 			// done
 			_this._updating = false;
 			_this._loading = false;
-			_this.onUpdated();
+			_this.options.onUpdated();
 		});
 	},
 	
