@@ -60,7 +60,8 @@ L.Streamline = L.Layer.extend({
 
 		this.streamline = new Streamline(
 			{ x:[0, this._width], y:[0, this._height] },
-			this._streamCtx
+			this._streamCtx,
+			this._retina
 		);
 		this.streamline.setMask(this._maskCtx, 100);
 	},
