@@ -23,7 +23,14 @@ L.Streamline = L.Layer.extend({
 	onAdd: function (map) {
 		this._map = map;
 		this._width  = map.getSize().x;	
-		this._height = map.getSize().y;	
+		this._height = map.getSize().y;
+
+		this._retina = window.devicePixelRatio >= 2;
+		if (this._retina){
+			this._width *= 2
+			this._height *= 2
+			console.log("retina")
+		}
 
 		this._initLayer();
 
@@ -53,7 +60,8 @@ L.Streamline = L.Layer.extend({
 
 		this.streamline = new Streamline(
 			{ x:[0, this._width], y:[0, this._height] },
-			this._streamCtx
+			this._streamCtx,
+			this._retina
 		);
 		this.streamline.setMask(this._maskCtx, 100);
 	},
@@ -64,6 +72,12 @@ L.Streamline = L.Layer.extend({
 		canvas.width = this._width;
 		canvas.height = this._height;
 		canvas.style.zIndex = zindex;
+
+		if (this._retina){
+			canvas.style.width = (this._width / 2) + 'px';
+			canvas.style.height = (this._height / 2) + 'px';
+		}
+
 		this._layer.appendChild(canvas);
 
 		return canvas.getContext("2d");
@@ -89,33 +103,33 @@ L.Streamline = L.Layer.extend({
 		var bounds = this._map.getBounds(),
 			zoom = this._map.getZoom(),
 			scale = this._getScale(zoom);
-		var _this = this;
+		var self = this;
 
 		this._windData.getWindField(bounds, zoom, function (windField) {
-			var origin = _this._map.getBounds().getNorthWest();
-			var originPoint = _this._map.project(origin);
+			var origin = self._map.getBounds().getNorthWest();
+			var originPoint = self._map.project(origin);
 
-			function unproject (x, y) {
-				return _this._map.unproject(originPoint.add([x, y]));
-			}
+			var unproject = (self._retina) ?
+				function (x, y) { return self._map.unproject(originPoint.add([x/2, y/2]))} :
+				function (x, y) { return self._map.unproject(originPoint.add([x, y]))}
 
 			console.time("interpolate field");
-			_this.streamline.setField(windField, unproject, scale, true);
+			self.streamline.setField(windField, unproject, scale, true);
 			console.timeEnd("interpolate field");
 			
 			console.time("start animating");
-			_this.streamline.animate();
+			self.streamline.animate();
 			console.timeEnd("start animating");
 
 			// show streamline
-			var pos = _this._map.latLngToLayerPoint(origin);
-			L.DomUtil.setPosition(_this._layer, pos);
-			L.DomUtil.setOpacity(_this._layer, 1.0);
+			var pos = self._map.latLngToLayerPoint(origin);
+			L.DomUtil.setPosition(self._layer, pos);
+			L.DomUtil.setOpacity(self._layer, 1.0);
 
 			// done
-			_this._updating = false;
-			_this._loading = false;
-			_this.options.onUpdated();
+			self._updating = false;
+			self._loading = false;
+			self.options.onUpdated();
 		});
 	},
 	

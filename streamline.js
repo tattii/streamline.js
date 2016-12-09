@@ -7,10 +7,10 @@
  *
  */
 
-function Streamline(bound, streamCtx) {
+function Streamline(bound, streamCtx, retina) {
 
-	var PARTICLE_MULTIPLIER = 7;
-	var PARTICLE_LINE_WIDTH = 1.0;
+	var PARTICLE_MULTIPLIER = (retina) ? 3 : 6;
+	var PARTICLE_LINE_WIDTH = (retina) ? 2 : 1;
 	var MAX_PARTICLE_AGE = 100;
 	var MASK_ALPHA = Math.floor(0.3*255);
 	var FRAME_RATE = 40;
@@ -19,6 +19,7 @@ function Streamline(bound, streamCtx) {
 
 	bound.width  = bound.x[1] - bound.x[0];
 	bound.height = bound.y[1] - bound.y[0];
+	console.log("field " + bound.width + "x" + bound.height);
 
 	var timer;  // frame rate timer
 	var mask;   // mask canvas
