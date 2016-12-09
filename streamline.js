@@ -20,6 +20,8 @@ function Streamline(bound, streamCtx) {
 	bound.width  = bound.x[1] - bound.x[0];
 	bound.height = bound.y[1] - bound.y[0];
 
+	console.log(bound);
+
 	var timer;  // frame rate timer
 	var mask;   // mask canvas
 	var maxv = 100; // mask relative max value
