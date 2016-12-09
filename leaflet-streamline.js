@@ -72,6 +72,7 @@ L.Streamline = L.Layer.extend({
 		canvas.width = this._width;
 		canvas.height = this._height;
 		canvas.style.zIndex = zindex;
+		canvas.style.willChange = 'transform';
 
 		if (this._retina){
 			canvas.style.width = (this._width / 2) + 'px';
