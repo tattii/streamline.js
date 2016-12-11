@@ -27,9 +27,8 @@ L.Streamline = L.Layer.extend({
 
 		this._retina = window.devicePixelRatio >= 2;
 		if (this._retina){
-			this._width *= 2
-			this._height *= 2
-			console.log("retina")
+			this._width *= 2;
+			this._height *= 2;
 		}
 
 		this._initLayer();
@@ -59,11 +58,11 @@ L.Streamline = L.Layer.extend({
 		this._streamCtx.globalAlpha = 0.9;
 
 		this.streamline = new Streamline(
-			{ x:[0, this._width], y:[0, this._height] },
+			this._width,
+			this._height,
 			this._streamCtx,
-			this._retina
+			{ retina: this._retina, maskCtx: this._maskCtx }
 		);
-		this.streamline.setMask(this._maskCtx, 100);
 	},
 
 	_initCanvas: function (id, zindex) {
@@ -97,7 +96,7 @@ L.Streamline = L.Layer.extend({
 		if (this._loading){
 			// interrupt
 			this._windData.abort();
-			this.streamline.cancel();
+			//this.streamline.cancel();
 		}
 		this._loading = true;
 
