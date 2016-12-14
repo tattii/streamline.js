@@ -11,7 +11,7 @@
 
 
 // settings
-Streamline.prototype.PARTICLE_MULTIPLIER = 0.01; //6;
+Streamline.prototype.PARTICLE_MULTIPLIER = 6;
 Streamline.prototype.PARTICLE_LINE_WIDTH = 1;
 Streamline.prototype.MAX_PARTICLE_AGE = 100;
 Streamline.prototype.MASK_ALPHA = Math.floor(0.3 * 255);
@@ -57,7 +57,7 @@ Streamline.prototype.setMaskField = function (field, unproject) {
 
 
 Streamline.prototype.animate = function () {
-	this.mask.draw();
+	if (this.mask) this.mask.draw();
 	this.animation.start(this.field);
 };
 
@@ -200,8 +200,6 @@ function StreamlineAnimate(streamCtx, width, height, density){
 	var area = width * height / 1200;
 	this.particleCount = Math.round(area * density * Streamline.prototype.PARTICLE_MULTIPLIER);
 	console.log("particles:" + this.particleCount);
-
-	console.log(this.streamCtx);
 }
 
 
@@ -267,7 +265,6 @@ StreamlineAnimate.prototype.draw = function () {
 			bucket.forEach(function(particle) {
 				self.streamCtx.moveTo(particle.x, particle.y);
 				self.streamCtx.lineTo(particle.xt, particle.yt);
-				console.log(particle);
 
 				particle.x = particle.xt;
 				particle.y = particle.yt;

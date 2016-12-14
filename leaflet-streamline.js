@@ -70,6 +70,9 @@ L.Streamline = L.Layer.extend({
 		canvas.id = id;
 		canvas.width = this._width;
 		canvas.height = this._height;
+		canvas.style.position = 'absolute';
+		canvas.style.top = 0;
+		canvas.style.left = 0;
 		canvas.style.zIndex = zindex;
 		canvas.style.willChange = 'transform';
 
