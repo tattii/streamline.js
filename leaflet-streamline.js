@@ -19,6 +19,11 @@ L.Streamline = L.Layer.extend({
 		this._windData = windData;
 		L.setOptions(this, options);
 	},
+	
+	setWindData: function (windData) {
+		this._windData = windData;
+		this._update();
+	},
 
 	onAdd: function (map) {
 		this._map = map;
@@ -90,7 +95,7 @@ L.Streamline = L.Layer.extend({
 		if (!this._updating){
 			this._updating = true;
 			this.options.onUpdate();
-			L.DomUtil.setOpacity(this._layer, 0);
+			//L.DomUtil.setOpacity(this._layer, 0);
 		}
 	},
 
