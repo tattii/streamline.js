@@ -5,8 +5,6 @@
  *
  * inspired from https://github.com/cambecc/earth
  *
- * require: underscore.js
- *
  */
 
 
@@ -136,8 +134,8 @@ StreamlineField.prototype.randomize = function (particle) {
 	var x, y;
 	var safetyNet = 0;
 	do {
-		x = Math.round(_.random(0, this.width));
-		y = Math.round(_.random(0, this.height));
+		x = Math.round(Math.random() * this.width);
+		y = Math.round(Math.random() * this.height);
 	} while (!this.isDefined(x, y) && safetyNet++ < 30);
 
 	particle.x = x;
@@ -210,7 +208,7 @@ StreamlineAnimate.prototype.init = function () {
 	for (var i = 0; i < this.particleCount; i++) {
 		this.particles.push(
 			this.field.randomize({
-				age: _.random(0, Streamline.prototype.MAX_PARTICLE_AGE)
+				age: Math.floor(Math.random() * Streamline.prototype.MAX_PARTICLE_AGE)
 			})
 		);
 	}
