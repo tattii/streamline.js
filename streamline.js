@@ -59,6 +59,9 @@ Streamline.prototype.animate = function () {
 	this.animation.start(this.field);
 };
 
+Streamline.prototype.cancel = function () {
+	if (this.animatino) this.animation.cancel();
+};
 
 
 /*
