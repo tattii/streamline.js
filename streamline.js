@@ -103,7 +103,7 @@ StreamlineField.prototype._interpolateRow = function (y) {
 				v[1] * this.scale_v,
 				Math.sqrt(v[0]*v[0] + v[1]*v[1])
 			];
-		row[x] = row[x+1] = wind;
+		row[x / 2] = wind;
 
 		// set color mask from wind speed
 		if (this.mask){
@@ -118,12 +118,12 @@ StreamlineField.prototype._interpolateRow = function (y) {
 		}
 	}
 
-	this.rows[y] = this.rows[y+1] = row;
+	this.rows[y / 2] = row;
 };
 
 StreamlineField.prototype.get = function (x, y) {
-	var row = this.rows[Math.round(y)];
-	return row && row[Math.round(x)] || Streamline.prototype.NULL_VECTOR;
+	var row = this.rows[Math.round(y / 2)];
+	return row && row[Math.round(x / 2)] || Streamline.prototype.NULL_VECTOR;
 };
 
 StreamlineField.prototype.isDefined = function (x, y) {
