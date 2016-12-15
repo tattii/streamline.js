@@ -36,15 +36,6 @@ L.Streamline = L.Layer.extend({
 
 		this._initLayer();
 
-		// set events
-		map.on('viewreset', this._update, this);
-		map.on('moveend',   this._update, this);
-		map.on('movestart', this._startUpdate, this);
-		map.on('zoomstart', this._startZoom, this);
-		map.on('zoomend',   this._endZoom, this);
-		map.on('zoomanim', this._animateZoom, this);
-		map.on('zoom', this._reset, this);
-
 		// first draw
 		this._update();
 	},
@@ -53,6 +44,17 @@ L.Streamline = L.Layer.extend({
 		this._map.getPanes().overlayPane.removeChild(this._layer);
 		this._map.off('viewreset');
 		this._map.off('moveend');
+	},
+
+	getEvents: function (){
+		return {
+			viewreset: this._update,
+			moveend:   this._update,
+			movestart: this._startUpdate,
+			zoomStart: this._startZoom,
+			zoom:      this._reset,
+			zoomanim:  this._animateZoom
+		};
 	},
 
 	_initLayer: function (){
@@ -101,11 +103,6 @@ L.Streamline = L.Layer.extend({
 	_startZoom: function (){
 		this._startUpdate();
 		this.streamline.cancel();
-	},
-
-	_endZoom: function (){
-		console.log('zoom end');
-		//this._scaleLayer();
 	},
 
 	_animateZoom: function (e) {
