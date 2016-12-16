@@ -19,6 +19,11 @@ L.Streamline = L.Layer.extend({
 		this._windData = windData;
 		L.setOptions(this, options);
 	},
+	
+	setWindData: function (windData) {
+		this._windData = windData;
+		this._update();
+	},
 
 	onAdd: function (map) {
 		this._map = map;
@@ -26,19 +31,10 @@ L.Streamline = L.Layer.extend({
 		this._height = map.getSize().y;
 
 		this._retina = window.devicePixelRatio >= 2;
-		if (this._retina){
-			this._width *= 2
-			this._height *= 2
-			console.log("retina")
-		}
+		this._canvasWidth = (this._retina) ? this._width * 2 : this._width;
+		this._canvasHeight = (this._retina) ? this._height * 2 : this._height;
 
 		this._initLayer();
-
-		// set events
-		map.on('viewreset', this._update, this);
-		map.on('moveend', this._update, this);
-		map.on('movestart', this._startUpdate, this);
-		map.on('zoomstart', this._startUpdate, this);
 
 		// first draw
 		this._update();
@@ -50,36 +46,49 @@ L.Streamline = L.Layer.extend({
 		this._map.off('moveend');
 	},
 
+	getEvents: function (){
+		return {
+			viewreset: this._update,
+			moveend:   this._update,
+			movestart: this._startUpdate,
+			zoomStart: this._startZoom,
+			zoom:      this._reset,
+			zoomanim:  this._animateZoom
+		};
+	},
+
 	_initLayer: function (){
 		this._layer = L.DomUtil.create('div', 'streamline-layer');
 		this._map.getPanes().overlayPane.appendChild(this._layer);
+		this._layerCanvases = [];
 
 		this._maskCtx = this._initCanvas("streamline-layer-mask", 3);	
 		this._streamCtx = this._initCanvas("streamline-layer-stream", 2);	
 		this._streamCtx.globalAlpha = 0.9;
 
 		this.streamline = new Streamline(
-			{ x:[0, this._width], y:[0, this._height] },
+			this._canvasWidth,
+			this._canvasHeight,
 			this._streamCtx,
-			this._retina
+			{ retina: this._retina, maskCtx: this._maskCtx }
 		);
-		this.streamline.setMask(this._maskCtx, 100);
 	},
 
 	_initCanvas: function (id, zindex) {
 		var canvas = document.createElement("canvas");
 		canvas.id = id;
-		canvas.width = this._width;
-		canvas.height = this._height;
+		canvas.width = this._canvasWidth;
+		canvas.height = this._canvasHeight;
+		canvas.style.position = 'absolute';
+		canvas.style.top = 0;
+		canvas.style.left = 0;
 		canvas.style.zIndex = zindex;
 		canvas.style.willChange = 'transform';
-
-		if (this._retina){
-			canvas.style.width = (this._width / 2) + 'px';
-			canvas.style.height = (this._height / 2) + 'px';
-		}
+		canvas.style.width = this._width + 'px';
+		canvas.style.height = this._height + 'px';
 
 		this._layer.appendChild(canvas);
+		this._layerCanvases.push(canvas);
 
 		return canvas.getContext("2d");
 	},
@@ -88,16 +97,46 @@ L.Streamline = L.Layer.extend({
 		if (!this._updating){
 			this._updating = true;
 			this.options.onUpdate();
-			L.DomUtil.setOpacity(this._layer, 0);
 		}
 	},
 
+	_startZoom: function (){
+		this._startUpdate();
+		this.streamline.cancel();
+	},
+
+	_animateZoom: function (e) {
+		var scale = this._map.getZoomScale(e.zoom, this.zoom),
+			offset = this._map._latLngBoundsToNewLayerBounds(this.bounds, e.zoom, e.center).min;
+
+		this._setLayerCanvasScale(scale);
+		L.DomUtil.setPosition(this._layer, offset);
+	},
+
+	_reset: function (){
+		var zoom = this._map.getZoom();
+		var scale = Math.pow(2, zoom - this.zoom);
+		var pos = this._map.latLngToLayerPoint(this.origin);
+		
+		this._setLayerCanvasScale(scale);	
+		L.DomUtil.setPosition(this._layer, pos);
+	},
+
+	_setLayerCanvasScale: function (scale){
+		var self = this;
+		this._layerCanvases.forEach(function (canvas){
+			canvas.style.width = (self._width * scale) + 'px';
+			canvas.style.height = (self._height * scale) + 'px';
+		});
+	},
+
 	_update: function (){
+		console.log('update');
 		this._startUpdate();
 		if (this._loading){
 			// interrupt
 			this._windData.abort();
-			this.streamline.cancel();
+			//this.streamline.cancel();
 		}
 		this._loading = true;
 
@@ -123,10 +162,11 @@ L.Streamline = L.Layer.extend({
 			console.timeEnd("start animating");
 
 			// show streamline
-			var pos = self._map.latLngToLayerPoint(origin);
-			L.DomUtil.setPosition(self._layer, pos);
-			L.DomUtil.setOpacity(self._layer, 1.0);
-
+			self.zoom = zoom;
+			self.origin = origin;
+			self.bounds = bounds;
+			self._reset();
+			
 			// done
 			self._updating = false;
 			self._loading = false;
