@@ -48,6 +48,13 @@ Streamline.prototype.setField = function (field, unproject, scale, inverseV) {
 		scale: scale,
 		inverseV: inverseV
 	});
+	this.field.interpolate();
+};
+
+Streamline.prototype.setCustomField = function (customField) {
+	this.field = customField;
+	this.field.init(this.width, this.height, this.mask);
+	this.field.interpolate();
 };
 
 Streamline.prototype.setMaskField = function (field, unproject) {
@@ -84,7 +91,9 @@ function StreamlineField (args) {
 	// color
 	this.maxv = 100;
 	this.color = new ExtendedSinebowColor(Streamline.prototype.MASK_ALPHA);
+};
 
+StreamlineField.prototype.interpolate = function () {
 	this.rows = [];
 	for (var y = 0; y < this.height; y += 2){
 		this._interpolateRow(y);
