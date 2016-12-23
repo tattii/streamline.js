@@ -198,8 +198,9 @@ function StreamlineFieldMercator (args) {
 	this.field = args.field;
 	
 	// set scales
-	this.scale_u = (args.scale) ? args.scale : 1;
-	this.scale_v = (args.scale) ? args.scale : 1;
+	if (!args.retina) args.scale /= 2;
+	this.scale_u = args.scale || 1;
+	this.scale_v = args.scale || 1;
 	if (args.inverseV) this.scale_v *= -1;
 
 	// color
