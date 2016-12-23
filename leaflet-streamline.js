@@ -131,7 +131,6 @@ L.Streamline = L.Layer.extend({
 	},
 
 	_update: function (){
-		console.log('update');
 		this._startUpdate();
 		if (this._loading){
 			// interrupt
@@ -179,7 +178,7 @@ L.Streamline = L.Layer.extend({
 	},
 	
 	_getScale: function (zoom) {
-		var scale = [0.3, 0.4, 0.6, 0.8, 1.0];
+		var scale = [0.1, 0.2, 0.3, 0.4, 0.5];
 		return scale[zoom - 5];
 	}
 });
