@@ -131,7 +131,6 @@ L.Streamline = L.Layer.extend({
 	},
 
 	_update: function (){
-		console.log('update');
 		this._startUpdate();
 		if (this._loading){
 			// interrupt
@@ -179,7 +178,7 @@ L.Streamline = L.Layer.extend({
 	},
 	
 	_getScale: function (zoom) {
-		var scale = [0.3, 0.4, 0.6, 0.8, 1.0];
+		var scale = [0.1, 0.2, 0.3, 0.4, 0.5];
 		return scale[zoom - 5];
 	}
 });
@@ -198,8 +197,9 @@ function StreamlineFieldMercator (args) {
 	this.field = args.field;
 	
 	// set scales
-	this.scale_u = (args.scale) ? args.scale : 1;
-	this.scale_v = (args.scale) ? args.scale : 1;
+	if (!args.retina) args.scale /= 2;
+	this.scale_u = args.scale || 1;
+	this.scale_v = args.scale || 1;
 	if (args.inverseV) this.scale_v *= -1;
 
 	// color

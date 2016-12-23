@@ -9,7 +9,7 @@
 
 
 // settings
-Streamline.prototype.PARTICLE_MULTIPLIER = 6;
+Streamline.prototype.PARTICLE_MULTIPLIER = 4;
 Streamline.prototype.PARTICLE_LINE_WIDTH = 1;
 Streamline.prototype.MAX_PARTICLE_AGE = 100;
 Streamline.prototype.MASK_ALPHA = Math.floor(0.3 * 255);
