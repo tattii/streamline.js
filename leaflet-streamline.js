@@ -203,7 +203,7 @@ function StreamlineFieldMercator (args) {
 	if (args.inverseV) this.scale_v *= -1;
 
 	// color
-	this.maxv = 100;
+	this.maxv = 60;
 	this.color = new ExtendedSinebowColor(Streamline.prototype.MASK_ALPHA);
 
 	// mercator
