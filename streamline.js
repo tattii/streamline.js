@@ -208,7 +208,8 @@ function StreamlineAnimate(streamCtx, width, height, density){
 	// decide particle count
 	if (!density) density = 1;
 	var area = width * height / 1200;
-	this.particleCount = Math.round(area * density * Streamline.prototype.PARTICLE_MULTIPLIER);
+	var count = Math.round(area * density * Streamline.prototype.PARTICLE_MULTIPLIER);
+	this.particleCount = (count > 5000) ? count * 0.7 : count; 
 	console.log("particles:" + this.particleCount);
 }
 
