@@ -25,6 +25,11 @@ L.Streamline = L.Layer.extend({
 		this._update();
 	},
 
+	setMaskData: function (maskData) {
+		this._maskData = maskData;
+		this._updateMask();
+	},
+
 	onAdd: function (map) {
 		this._map = map;
 		this._width  = map.getSize().x;	
@@ -113,7 +118,7 @@ L.Streamline = L.Layer.extend({
 		L.DomUtil.setPosition(this._layer, offset);
 	},
 
-	_reset: function (){
+	_reset: function (layer_zoom, origin){
 		var zoom = this._map.getZoom();
 		var scale = Math.pow(2, zoom - this.zoom);
 		var pos = this._map.latLngToLayerPoint(this.origin);
@@ -145,36 +150,42 @@ L.Streamline = L.Layer.extend({
 		var self = this;
 
 		this._windData.getWindField(bounds, zoom, function (windField) {
-			var origin = self._map.getBounds().getNorthWest();
-			var originPoint = self._map.project(origin);
-
-			console.time("interpolate field");
-			var mercatorField = new StreamlineFieldMercator({
-				field: windField,
-				scale: scale,
-				inverseV: true,
-				retina: self._retina,
-				originPoint: originPoint,
-				zoom: self._map.getZoom()
-			});
-			self.streamline.setCustomField(mercatorField);
-			console.timeEnd("interpolate field");
-			
-			console.time("start animating");
-			self.streamline.animate();
-			console.timeEnd("start animating");
-
-			// show streamline
-			self.zoom = zoom;
-			self.origin = origin;
-			self.bounds = bounds;
-			self._reset();
-			
-			// done
-			self._updating = false;
-			self._loading = false;
-			self.options.onUpdated();
+			self._updateWindField(windField, bounds, zoom, scale);
 		});
+	},
+
+
+	_updateWindField: function (windField, bounds, zoom, scale) {
+		var origin = this._map.getBounds().getNorthWest();
+		var originPoint = this._map.project(origin);
+
+		console.time("interpolate field");
+		var mercatorField = new StreamlineFieldMercator({
+			field: windField,
+			scale: scale,
+			inverseV: true,
+			retina: this._retina,
+			originPoint: originPoint,
+			zoom: zoom
+		});
+		this.streamline.setCustomField(mercatorField);
+		console.timeEnd("interpolate field");
+		
+		console.time("start animating");
+		this.streamline.animate();
+		console.timeEnd("start animating");
+
+		// show streamline
+		this.zoom = zoom;
+		this.origin = origin;
+		this.bounds = bounds;
+		this._reset();
+		
+		// done
+		this._updating = false;
+		this._loading = false;
+		this.options.onUpdated();
+
 	},
 	
 	_getScale: function (zoom) {
