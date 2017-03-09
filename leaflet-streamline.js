@@ -22,12 +22,10 @@ L.Streamline = L.Layer.extend({
 	
 	setWindData: function (windData) {
 		this._windData = windData;
-		this._update();
 	},
 
 	setMaskData: function (maskData) {
 		this._maskData = maskData;
-		this._updateMask();
 	},
 
 	onAdd: function (map) {
@@ -152,6 +150,13 @@ L.Streamline = L.Layer.extend({
 		this._windData.getWindField(bounds, zoom, function (windField) {
 			self._updateWindField(windField, bounds, zoom, scale);
 		});
+
+		if (this._maskData){
+			this._maskData.getField(bounds, zoom, function (maskField) {
+				console.log(maskField);
+				self._updateMaskField(maskField, bounds, zoom);
+			});
+		}
 	},
 
 
@@ -165,7 +170,8 @@ L.Streamline = L.Layer.extend({
 			scale: scale,
 			retina: this._retina,
 			originPoint: originPoint,
-			zoom: zoom
+			zoom: zoom,
+			mask: (this._maskData) ? false : true
 		});
 		this.streamline.setCustomField(mercatorField);
 		console.timeEnd("interpolate field");
@@ -187,6 +193,33 @@ L.Streamline = L.Layer.extend({
 
 	},
 	
+	_updateMaskField: function (maskField, bounds, zoom) {
+		var origin = this._map.getBounds().getNorthWest();
+		var originPoint = this._map.project(origin);
+
+		console.time("interpolate mask");
+		var mercatorField = new StreamlineMaskMercator({
+			field: maskField,
+			retina: this._retina,
+			originPoint: originPoint,
+			zoom: zoom
+		});
+		this.streamline.setMaskField(mercatorField);
+		console.timeEnd("interpolate mask");
+		
+		// show streamline
+		this.zoom = zoom;
+		this.origin = origin;
+		this.bounds = bounds;
+		this._reset();
+		
+		// done
+		this._updating = false;
+		this._loading = false;
+		this.options.onUpdated();
+
+	},
+
 	_getScale: function (zoom) {
 		var scale = [0.1, 0.2, 0.3, 0.4, 0.5];
 		return scale[zoom - 5];
@@ -205,6 +238,7 @@ L.streamline = function() {
 
 function StreamlineFieldMercator (args) {
 	this.field = args.field;
+	this._drawMask = args.mask;
 	
 	// set scales
 	if (!args.retina) args.scale /= 2;
@@ -265,7 +299,7 @@ StreamlineFieldMercator.prototype._interpolateRow = function (y) {
 		row[x / 2] = wind;
 
 		// set color mask from wind speed
-		if (this.mask){
+		if (this._drawMask){
 			var color = (v[0] == null) ?
 				Streamline.prototype.TRANSPARENT_BLACK :
 				this.getColor(wind[2]);
@@ -321,4 +355,87 @@ StreamlineFieldMercator.prototype.randomize = function (particle) {
 StreamlineFieldMercator.prototype.getColor = function (x) {
 	return this.color.color(Math.min(x, this.maxv) / this.maxv);
 };
+
+
+
+/*
+ * StreamlineMaskMercator - specified for Spherical Mercator
+ *
+ */
+
+function StreamlineMaskMercator (args) {
+	this.field = args.field;
+
+	// color
+	this.color = new ExtendedSinebowColor(Streamline.prototype.MASK_ALPHA);
+
+	// mercator
+	this.originPoint = args.originPoint;
+	this._scale = 256 * Math.pow(2, args.zoom);
+	this._retinaScale = (args.retina) ? 2 : 1;
+
+	// sherical mercator const
+	this._R = L.Projection.SphericalMercator.R;
+	this._mercatorScale = 0.5 / (Math.PI * this._R);
+}
+
+StreamlineMaskMercator.prototype.init = function (width, height, mask) {
+	this.width = width;
+	this.height = height;
+	this.mask = mask;
+};
+
+StreamlineMaskMercator.prototype.interpolate = function () {
+	this._X = [];
+	for (var x = 0; x < this.width; x += 2){
+		var lng = this.unprojectLng(x);
+		this._X.push(this.field.getDx(lng));
+	}
+
+	this.rows = [];
+	for (var y = 0; y < this.height; y += 2){
+		this._interpolateRow(y);
+	}
+};
+
+// interpolate each 2x2 pixels
+StreamlineMaskMercator.prototype._interpolateRow = function (y) {
+	var lat = this.unprojectLat(y);
+	var Y = this.field.getDy(lat);
+
+	var row = [];
+
+	for (var x = 0; x < this.width; x += 2){
+		var v = this.field.getValueXY(this._X[x/2], Y);
+
+		var color = (v == null) ?
+			Streamline.prototype.TRANSPARENT_BLACK :
+			this.color.color((v - 263) / 30);
+
+		this.mask.set(x,   y,   color)
+		this.mask.set(x+1, y,   color)
+		this.mask.set(x,   y+1, color)
+		this.mask.set(x+1, y+1, color);
+	}
+
+	this.rows[y / 2] = row;
+};
+
+
+StreamlineMaskMercator.prototype.unprojectLat = function (y) {
+	var Y = this.originPoint.y + y / this._retinaScale;
+	var my = (0.5 - Y / this._scale) / this._mercatorScale;
+	var lat = (2 * Math.atan(Math.exp(my / this._R)) - (Math.PI / 2)) * 180 / Math.PI;
+	return lat;
+};
+
+StreamlineMaskMercator.prototype.unprojectLng = function (x) {
+	var X = this.originPoint.x + x / this._retinaScale;
+	var mx = (X / this._scale - 0.5) / this._mercatorScale;
+	var lng = mx * 180 / Math.PI / this._R;
+	return lng;
+};
+
+
+
 

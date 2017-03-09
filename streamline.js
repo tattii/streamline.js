@@ -57,7 +57,11 @@ Streamline.prototype.setCustomField = function (customField) {
 	this.field.interpolate();
 };
 
-Streamline.prototype.setMaskField = function (field, unproject) {
+Streamline.prototype.setMaskField = function (field) {
+	this.mask_field = field;
+	this.mask_field.init(this.width, this.height, this.mask);
+	this.mask_field.interpolate();
+	this.mask.draw();
 };
 
 
