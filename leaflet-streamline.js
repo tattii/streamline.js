@@ -163,7 +163,6 @@ L.Streamline = L.Layer.extend({
 		var mercatorField = new StreamlineFieldMercator({
 			field: windField,
 			scale: scale,
-			inverseV: true,
 			retina: this._retina,
 			originPoint: originPoint,
 			zoom: zoom
@@ -210,8 +209,7 @@ function StreamlineFieldMercator (args) {
 	// set scales
 	if (!args.retina) args.scale /= 2;
 	this.scale_u = args.scale || 1;
-	this.scale_v = args.scale || 1;
-	if (args.inverseV) this.scale_v *= -1;
+	this.scale_v = (args.scale || 1) * -1;
 
 	// color
 	this.maxv = 60;
