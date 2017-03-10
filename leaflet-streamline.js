@@ -24,8 +24,9 @@ L.Streamline = L.Layer.extend({
 		this._windData = windData;
 	},
 
-	setMaskData: function (maskData) {
+	setMaskData: function (maskData, maskColor) {
 		this._maskData = maskData;
+		this._maskColor = maskColor;
 	},
 
 	onAdd: function (map) {
@@ -151,7 +152,7 @@ L.Streamline = L.Layer.extend({
 			self._updateWindField(windField, bounds, zoom, scale);
 		});
 
-		if (this._maskData){
+		if (this._maskData){ 
 			this._maskData.getField(bounds, zoom, function (maskField) {
 				console.log(maskField);
 				self._updateMaskField(maskField, bounds, zoom);
@@ -202,7 +203,8 @@ L.Streamline = L.Layer.extend({
 			field: maskField,
 			retina: this._retina,
 			originPoint: originPoint,
-			zoom: zoom
+			zoom: zoom,
+			color: this._maskColor
 		});
 		this.streamline.setMaskField(mercatorField);
 		console.timeEnd("interpolate mask");
@@ -367,7 +369,7 @@ function StreamlineMaskMercator (args) {
 	this.field = args.field;
 
 	// color
-	this.color = new ExtendedSinebowColor(Streamline.prototype.MASK_ALPHA);
+	this.color = args.color;
 
 	// mercator
 	this.originPoint = args.originPoint;
@@ -410,7 +412,7 @@ StreamlineMaskMercator.prototype._interpolateRow = function (y) {
 
 		var color = (v == null) ?
 			Streamline.prototype.TRANSPARENT_BLACK :
-			this.color.color((v - 263) / 30);
+			this.color(v);
 
 		this.mask.set(x,   y,   color)
 		this.mask.set(x+1, y,   color)
