@@ -57,7 +57,11 @@ Streamline.prototype.setCustomField = function (customField) {
 	this.field.interpolate();
 };
 
-Streamline.prototype.setMaskField = function (field, unproject) {
+Streamline.prototype.setMaskField = function (field) {
+	this.mask_field = field;
+	this.mask_field.init(this.width, this.height, this.mask);
+	this.mask_field.interpolate();
+	this.mask.draw();
 };
 
 
@@ -209,7 +213,7 @@ function StreamlineAnimate(streamCtx, width, height, density){
 	if (!density) density = 1;
 	var area = width * height / 1200;
 	var count = Math.round(area * density * Streamline.prototype.PARTICLE_MULTIPLIER);
-	this.particleCount = (count > 5000) ? count * 0.7 : count; 
+	this.particleCount = (count > 5000) ? Math.round(count * 0.7) : count; 
 	console.log("particles:" + this.particleCount);
 }
 
@@ -374,5 +378,37 @@ ExtendedSinebowColor.prototype.sinebowColor = function (hue, a) {
 	var b = Math.floor(Math.max(c, 0, -s) * 255);
 	return [r, g, b, a];
 };
+
+
+
+function SegmentedColorScale(segments) {
+	var points = [], interpolators = [], ranges = [];
+	for (var i = 0; i < segments.length - 1; i++) {
+		points.push(segments[i+1][0]);
+		interpolators.push(colorInterpolator(segments[i][1], segments[i+1][1]));
+		ranges.push([segments[i][0], segments[i+1][0]]);
+	}
+
+	function colorInterpolator(start, end) {
+		var r = start[0], g = start[1], b = start[2];
+		var Δr = end[0] - r, Δg = end[1] - g, Δb = end[2] - b;
+		return function(i, a) {
+			return [Math.floor(r + i * Δr), Math.floor(g + i * Δg), Math.floor(b + i * Δb), a];
+		};
+	}
+
+	return function(point, alpha) {
+		var i;
+		for (i = 0; i < points.length - 1; i++) {
+			if (point <= points[i]) {
+				break;
+			}
+		}
+		var low = ranges[i][0], high = ranges[i][1];
+		var dt = (Math.max(low, Math.min(point, high)) - low) / (high - low);
+		return interpolators[i](dt, alpha);
+	};
+}
+
 
 

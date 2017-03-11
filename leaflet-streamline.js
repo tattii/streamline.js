@@ -18,11 +18,18 @@ L.Streamline = L.Layer.extend({
 	initialize: function (windData, options) {
 		this._windData = windData;
 		L.setOptions(this, options);
+
+		this._updating = false;
+		this._updateCount = 0;
 	},
 	
 	setWindData: function (windData) {
 		this._windData = windData;
-		this._update();
+	},
+
+	setMaskData: function (maskData, maskColor) {
+		this._maskData = maskData;
+		this._maskColor = maskColor;
 	},
 
 	onAdd: function (map) {
@@ -93,13 +100,6 @@ L.Streamline = L.Layer.extend({
 		return canvas.getContext("2d");
 	},
 
-	_startUpdate: function (){
-		if (!this._updating){
-			this._updating = true;
-			this.options.onUpdate();
-		}
-	},
-
 	_startZoom: function (){
 		this._startUpdate();
 		this.streamline.cancel();
@@ -113,7 +113,7 @@ L.Streamline = L.Layer.extend({
 		L.DomUtil.setPosition(this._layer, offset);
 	},
 
-	_reset: function (){
+	_reset: function (layer_zoom, origin){
 		var zoom = this._map.getZoom();
 		var scale = Math.pow(2, zoom - this.zoom);
 		var pos = this._map.latLngToLayerPoint(this.origin);
@@ -130,53 +130,100 @@ L.Streamline = L.Layer.extend({
 		});
 	},
 
+	_startUpdate: function (){
+		if (!this._updating){
+			this._updating = true;
+			this.options.onUpdate();
+		}
+	},
+
+	_startUpdateCount: function (){
+		this._updateCount++;
+	},
+
+	_endUpdate: function (){
+		this._updateCount--;
+		if (this._updateCount <= 0){
+			this._updating = false;
+			this.options.onUpdated();
+		}
+	},
+
 	_update: function (){
 		this._startUpdate();
-		if (this._loading){
-			// interrupt
-			this._windData.abort();
-			//this.streamline.cancel();
-		}
-		this._loading = true;
 
 		var bounds = this._map.getBounds(),
 			zoom = this._map.getZoom(),
 			scale = this._getScale(zoom);
 		var self = this;
 
+		this._startUpdateCount("wind");
 		this._windData.getWindField(bounds, zoom, function (windField) {
-			var origin = self._map.getBounds().getNorthWest();
-			var originPoint = self._map.project(origin);
-
-			console.time("interpolate field");
-			var mercatorField = new StreamlineFieldMercator({
-				field: windField,
-				scale: scale,
-				inverseV: true,
-				retina: self._retina,
-				originPoint: originPoint,
-				zoom: self._map.getZoom()
-			});
-			self.streamline.setCustomField(mercatorField);
-			console.timeEnd("interpolate field");
-			
-			console.time("start animating");
-			self.streamline.animate();
-			console.timeEnd("start animating");
-
-			// show streamline
-			self.zoom = zoom;
-			self.origin = origin;
-			self.bounds = bounds;
-			self._reset();
-			
-			// done
-			self._updating = false;
-			self._loading = false;
-			self.options.onUpdated();
+			self._updateWindField(windField, bounds, zoom, scale);
 		});
+
+		if (this._maskData){ 
+			this._startUpdateCount("mask");
+			this._maskData.getField(bounds, zoom, function (maskField) {
+				self._updateMaskField(maskField, bounds, zoom);
+			});
+		}
+	},
+
+
+	_updateWindField: function (windField, bounds, zoom, scale) {
+		var origin = this._map.getBounds().getNorthWest();
+		var originPoint = this._map.project(origin);
+
+		console.time("interpolate field");
+		var mercatorField = new StreamlineFieldMercator({
+			field: windField,
+			scale: scale,
+			retina: this._retina,
+			originPoint: originPoint,
+			zoom: zoom,
+			mask: (this._maskData) ? false : true
+		});
+		this.streamline.setCustomField(mercatorField);
+		console.timeEnd("interpolate field");
+		
+		console.time("start animating");
+		this.streamline.animate();
+		console.timeEnd("start animating");
+
+		// show streamline
+		this.zoom = zoom;
+		this.origin = origin;
+		this.bounds = bounds;
+		this._reset();
+		
+		this._endUpdate();
 	},
 	
+	_updateMaskField: function (maskField, bounds, zoom) {
+		var origin = this._map.getBounds().getNorthWest();
+		var originPoint = this._map.project(origin);
+
+		console.time("interpolate mask");
+		var mercatorField = new StreamlineMaskMercator({
+			field: maskField,
+			retina: this._retina,
+			originPoint: originPoint,
+			zoom: zoom,
+			color: this._maskColor
+		});
+		this.streamline.setMaskField(mercatorField);
+		console.timeEnd("interpolate mask");
+		
+		// show streamline
+		this.zoom = zoom;
+		this.origin = origin;
+		this.bounds = bounds;
+		this._reset();
+		
+		this._endUpdate();
+	},
+
 	_getScale: function (zoom) {
 		var scale = [0.1, 0.2, 0.3, 0.4, 0.5];
 		return scale[zoom - 5];
@@ -195,12 +242,12 @@ L.streamline = function() {
 
 function StreamlineFieldMercator (args) {
 	this.field = args.field;
+	this._drawMask = args.mask;
 	
 	// set scales
 	if (!args.retina) args.scale /= 2;
 	this.scale_u = args.scale || 1;
-	this.scale_v = args.scale || 1;
-	if (args.inverseV) this.scale_v *= -1;
+	this.scale_v = (args.scale || 1) * -1;
 
 	// color
 	this.maxv = 60;
@@ -256,7 +303,7 @@ StreamlineFieldMercator.prototype._interpolateRow = function (y) {
 		row[x / 2] = wind;
 
 		// set color mask from wind speed
-		if (this.mask){
+		if (this._drawMask){
 			var color = (v[0] == null) ?
 				Streamline.prototype.TRANSPARENT_BLACK :
 				this.getColor(wind[2]);
@@ -312,4 +359,87 @@ StreamlineFieldMercator.prototype.randomize = function (particle) {
 StreamlineFieldMercator.prototype.getColor = function (x) {
 	return this.color.color(Math.min(x, this.maxv) / this.maxv);
 };
+
+
+
+/*
+ * StreamlineMaskMercator - specified for Spherical Mercator
+ *
+ */
+
+function StreamlineMaskMercator (args) {
+	this.field = args.field;
+
+	// color
+	this.color = args.color;
+
+	// mercator
+	this.originPoint = args.originPoint;
+	this._scale = 256 * Math.pow(2, args.zoom);
+	this._retinaScale = (args.retina) ? 2 : 1;
+
+	// sherical mercator const
+	this._R = L.Projection.SphericalMercator.R;
+	this._mercatorScale = 0.5 / (Math.PI * this._R);
+}
+
+StreamlineMaskMercator.prototype.init = function (width, height, mask) {
+	this.width = width;
+	this.height = height;
+	this.mask = mask;
+};
+
+StreamlineMaskMercator.prototype.interpolate = function () {
+	this._X = [];
+	for (var x = 0; x < this.width; x += 2){
+		var lng = this.unprojectLng(x);
+		this._X.push(this.field.getDx(lng));
+	}
+
+	this.rows = [];
+	for (var y = 0; y < this.height; y += 2){
+		this._interpolateRow(y);
+	}
+};
+
+// interpolate each 2x2 pixels
+StreamlineMaskMercator.prototype._interpolateRow = function (y) {
+	var lat = this.unprojectLat(y);
+	var Y = this.field.getDy(lat);
+
+	var row = [];
+
+	for (var x = 0; x < this.width; x += 2){
+		var v = this.field.getValueXY(this._X[x/2], Y);
+
+		var color = (v == null) ?
+			Streamline.prototype.TRANSPARENT_BLACK :
+			this.color(v);
+
+		this.mask.set(x,   y,   color)
+		this.mask.set(x+1, y,   color)
+		this.mask.set(x,   y+1, color)
+		this.mask.set(x+1, y+1, color);
+	}
+
+	this.rows[y / 2] = row;
+};
+
+
+StreamlineMaskMercator.prototype.unprojectLat = function (y) {
+	var Y = this.originPoint.y + y / this._retinaScale;
+	var my = (0.5 - Y / this._scale) / this._mercatorScale;
+	var lat = (2 * Math.atan(Math.exp(my / this._R)) - (Math.PI / 2)) * 180 / Math.PI;
+	return lat;
+};
+
+StreamlineMaskMercator.prototype.unprojectLng = function (x) {
+	var X = this.originPoint.x + x / this._retinaScale;
+	var mx = (X / this._scale - 0.5) / this._mercatorScale;
+	var lng = mx * 180 / Math.PI / this._R;
+	return lng;
+};
+
+
+
 
