@@ -18,6 +18,9 @@ L.Streamline = L.Layer.extend({
 	initialize: function (windData, options) {
 		this._windData = windData;
 		L.setOptions(this, options);
+
+		this._updating = false;
+		this._updateCount = 0;
 	},
 	
 	setWindData: function (windData) {
@@ -97,13 +100,6 @@ L.Streamline = L.Layer.extend({
 		return canvas.getContext("2d");
 	},
 
-	_startUpdate: function (){
-		if (!this._updating){
-			this._updating = true;
-			this.options.onUpdate();
-		}
-	},
-
 	_startZoom: function (){
 		this._startUpdate();
 		this.streamline.cancel();
@@ -134,14 +130,27 @@ L.Streamline = L.Layer.extend({
 		});
 	},
 
+	_startUpdate: function (){
+		if (!this._updating){
+			this._updating = true;
+			this.options.onUpdate();
+		}
+	},
+
+	_startUpdateCount: function (){
+		this._updateCount++;
+	},
+
+	_endUpdate: function (){
+		this._updateCount--;
+		if (this._updateCount <= 0){
+			this._updating = false;
+			this.options.onUpdated();
+		}
+	},
+
 	_update: function (){
 		this._startUpdate();
-		if (this._loading){
-			// interrupt
-			this._windData.abort();
-			//this.streamline.cancel();
-		}
-		this._loading = true;
 
 		var bounds = this._map.getBounds(),
 			zoom = this._map.getZoom(),
@@ -162,6 +171,8 @@ L.Streamline = L.Layer.extend({
 
 
 	_updateWindField: function (windField, bounds, zoom, scale) {
+		this._startUpdateCount("wind");
+
 		var origin = this._map.getBounds().getNorthWest();
 		var originPoint = this._map.project(origin);
 
@@ -187,14 +198,12 @@ L.Streamline = L.Layer.extend({
 		this.bounds = bounds;
 		this._reset();
 		
-		// done
-		this._updating = false;
-		this._loading = false;
-		this.options.onUpdated();
-
+		this._endUpdate();
 	},
 	
 	_updateMaskField: function (maskField, bounds, zoom) {
+		this._startUpdateCount("mask");
+
 		var origin = this._map.getBounds().getNorthWest();
 		var originPoint = this._map.project(origin);
 
@@ -215,11 +224,7 @@ L.Streamline = L.Layer.extend({
 		this.bounds = bounds;
 		this._reset();
 		
-		// done
-		this._updating = false;
-		this._loading = false;
-		this.options.onUpdated();
-
+		this._endUpdate();
 	},
 
 	_getScale: function (zoom) {
