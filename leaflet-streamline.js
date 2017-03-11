@@ -165,7 +165,6 @@ L.Streamline = L.Layer.extend({
 		if (this._maskData){ 
 			this._startUpdateCount("mask");
 			this._maskData.getField(bounds, zoom, function (maskField) {
-				console.log(maskField);
 				self._updateMaskField(maskField, bounds, zoom);
 			});
 		}
