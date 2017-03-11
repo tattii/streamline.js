@@ -157,11 +157,13 @@ L.Streamline = L.Layer.extend({
 			scale = this._getScale(zoom);
 		var self = this;
 
+		this._startUpdateCount("wind");
 		this._windData.getWindField(bounds, zoom, function (windField) {
 			self._updateWindField(windField, bounds, zoom, scale);
 		});
 
 		if (this._maskData){ 
+			this._startUpdateCount("mask");
 			this._maskData.getField(bounds, zoom, function (maskField) {
 				console.log(maskField);
 				self._updateMaskField(maskField, bounds, zoom);
@@ -171,8 +173,6 @@ L.Streamline = L.Layer.extend({
 
 
 	_updateWindField: function (windField, bounds, zoom, scale) {
-		this._startUpdateCount("wind");
-
 		var origin = this._map.getBounds().getNorthWest();
 		var originPoint = this._map.project(origin);
 
@@ -202,8 +202,6 @@ L.Streamline = L.Layer.extend({
 	},
 	
 	_updateMaskField: function (maskField, bounds, zoom) {
-		this._startUpdateCount("mask");
-
 		var origin = this._map.getBounds().getNorthWest();
 		var originPoint = this._map.project(origin);
 
