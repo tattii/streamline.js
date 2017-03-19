@@ -396,7 +396,6 @@ StreamlineMaskMercator.prototype.interpolate = function () {
 		this._X.push(this.field.getDx(lng));
 	}
 
-	this.rows = [];
 	for (var y = 0; y < this.height; y += 2){
 		this._interpolateRow(y);
 	}
@@ -406,8 +405,6 @@ StreamlineMaskMercator.prototype.interpolate = function () {
 StreamlineMaskMercator.prototype._interpolateRow = function (y) {
 	var lat = this.unprojectLat(y);
 	var Y = this.field.getDy(lat);
-
-	var row = [];
 
 	for (var x = 0; x < this.width; x += 2){
 		var v = this.field.getValueXY(this._X[x/2], Y);
@@ -421,8 +418,6 @@ StreamlineMaskMercator.prototype._interpolateRow = function (y) {
 		this.mask.set(x,   y+1, color)
 		this.mask.set(x+1, y+1, color);
 	}
-
-	this.rows[y / 2] = row;
 };
 
 
