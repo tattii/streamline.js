@@ -205,7 +205,6 @@ function StreamlineAnimate(streamCtx, width, height, density){
 	this.height = height;
 		
 	this.streamCtx.lineWidth = Streamline.prototype.PARTICLE_LINE_WIDTH;
-	this.streamCtx.fillStyle = "rgba(0, 0, 0, 0.97)";
 	
 	this.color = this.colorScale(10, 17);
 
@@ -264,6 +263,7 @@ StreamlineAnimate.prototype.evolve = function () {
 StreamlineAnimate.prototype.fade = function () {
 	var prev = this.streamCtx.globalCompositeOperation;
 	this.streamCtx.globalCompositeOperation = "destination-in";
+	this.streamCtx.fillStyle = "rgba(0, 0, 0, 0.97)";
 	this.streamCtx.fillRect(0, 0, this.width, this.height);
 	this.streamCtx.globalCompositeOperation = prev;
 };
@@ -293,6 +293,11 @@ StreamlineAnimate.prototype.draw = function () {
 StreamlineAnimate.prototype.start = function (field) {
 	if (this.timer) clearTimeout(this.timer);
 	this.streamCtx.clearRect(0, 0, this.width, this.height);
+
+	// fill light grey for fading trace 
+	// 0.97^n -> 0 but 0.97^150 = 0.0103...
+	this.streamCtx.fillStyle = "rgba(255, 255, 255, 0.02)";
+	this.streamCtx.fillRect(0, 0, this.width, this.height);
 
 	this.field = field;
 	this.init();
